@@ -1,5 +1,5 @@
 {
-  "name": "GemmaGuard: AI for Truth",
-  "description": "A Gemma powered bias and propaganda detector. Fighting misinformation through advanced linguistic analysis.",
+  "name": "GemmaGuard: AI Safety & Bias Detection",
+  "description": "A Gemma powered AI safety and bias detection tool. Ensuring content integrity through advanced linguistic analysis and harmful pattern identification.",
   "requestFramePermissions": []
 }

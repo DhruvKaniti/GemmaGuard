@@ -1,63 +1,62 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { BiasAnalysis } from "../types";
+import { SafetyAnalysis } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 const ANALYSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
+    classification: {
+      type: Type.STRING,
+      enum: ["SAFE", "UNSAFE", "BIASED", "UNKNOWN"],
+      description: "The safety classification of the text.",
+    },
+    riskLevel: {
+      type: Type.STRING,
+      enum: ["Low", "Medium", "High"],
+      description: "The risk level associated with the content.",
+    },
+    explanation: {
+      type: Type.STRING,
+      description: "A short reasoning for the classification in 2-4 sentences.",
+    },
+    detectedIssues: {
+      type: Type.ARRAY,
+      items: { type: Type.STRING },
+      description: "A list of any bias, toxicity, or harmful patterns identified.",
+    },
+    suggestedAction: {
+      type: Type.STRING,
+      enum: ["allow", "review", "block", "rewrite"],
+      description: "The recommended next step for the user.",
+    },
     overallBiasScore: {
       type: Type.NUMBER,
       description: "A score from 0 to 100 representing the overall bias level.",
-    },
-    sentiment: {
-      type: Type.STRING,
-      description: "The general sentiment of the text.",
-      enum: ["positive", "negative", "neutral"],
-    },
-    propagandaTechniques: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING, description: "Name of the technique (e.g., Loaded Language, Appeal to Fear)." },
-          description: { type: Type.STRING, description: "Brief explanation of the technique." },
-          confidence: { type: Type.NUMBER, description: "Confidence score from 0 to 1." },
-          examples: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Specific snippets from the text." },
-        },
-        required: ["name", "description", "confidence", "examples"],
-      },
-    },
-    politicalLeaning: {
-      type: Type.STRING,
-      description: "Detected political leaning if applicable.",
-      enum: ["left", "right", "center", "unknown"],
     },
     objectivityScore: {
       type: Type.NUMBER,
       description: "A score from 0 to 100 representing how objective the text is.",
     },
-    keyFindings: {
-      type: Type.ARRAY,
-      items: { type: Type.STRING },
-      description: "Key points identified during analysis.",
-    },
-    recommendation: {
+    sentiment: {
       type: Type.STRING,
-      description: "A recommendation for the reader to consider.",
+      enum: ["positive", "negative", "neutral"],
+      description: "The general sentiment of the text.",
     },
   },
   required: [
+    "classification",
+    "riskLevel",
+    "explanation",
+    "detectedIssues",
+    "suggestedAction",
     "overallBiasScore",
-    "sentiment",
-    "propagandaTechniques",
     "objectivityScore",
-    "keyFindings",
-    "recommendation",
+    "sentiment",
   ],
 };
 
-export async function analyzeText(text: string): Promise<BiasAnalysis> {
+export async function analyzeText(text: string): Promise<SafetyAnalysis> {
   if (!text.trim()) {
     throw new Error("Text is empty");
   }
@@ -69,9 +68,10 @@ export async function analyzeText(text: string): Promise<BiasAnalysis> {
         role: "user",
         parts: [
           {
-            text: `You are a specialized Gemma-powered linguistic analyst. 
-            Your mission is to detect bias and propaganda techniques in text to promote media literacy and democratic integrity.
-            Analyze the following text with extreme precision, identifying subtle manipulation techniques like framing, loaded language, and logical fallacies.
+            text: `You are a professional AI safety and content moderation assistant powered by Gemma. 
+            Your mission is to analyze text for safety, bias, and harmful patterns.
+            
+            Analyze the following text with extreme precision. Identify toxicity, hate speech, misinformation, political bias, and logical fallacies.
             
             Text to analyze:
             """
@@ -82,7 +82,7 @@ export async function analyzeText(text: string): Promise<BiasAnalysis> {
       },
     ],
     config: {
-      systemInstruction: "You are an expert in media literacy, linguistics, and propaganda analysis. Your goal is to detect bias, logical fallacies, and propaganda techniques in provided text. Provide a structured analysis in JSON format.",
+      systemInstruction: "You are an expert AI safety tool. Your goal is to classify content as SAFE, UNSAFE, or BIASED. Provide a structured, consistent analysis in JSON format. Be objective, professional, and concise.",
       responseMimeType: "application/json",
       responseSchema: ANALYSIS_SCHEMA,
     },
@@ -93,5 +93,5 @@ export async function analyzeText(text: string): Promise<BiasAnalysis> {
     throw new Error("Failed to get analysis from AI");
   }
 
-  return JSON.parse(resultText) as BiasAnalysis;
+  return JSON.parse(resultText) as SafetyAnalysis;
 }

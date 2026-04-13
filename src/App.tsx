@@ -131,7 +131,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="font-bold text-lg tracking-tight leading-none">GemmaGuard</h1>
-              <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mt-1">Gemma Edition</p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mt-1">AI Safety Edition</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -173,13 +173,13 @@ export default function App() {
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-semibold border border-indigo-100"
                 >
                   <Zap className="w-3 h-3" />
-                  Gemma 4 Powered Analysis
+                  Gemma Powered Safety Analysis
                 </motion.div>
                 <h2 className="text-4xl sm:text-5xl font-serif font-medium tracking-tight text-slate-900">
-                  AI for Truth. <span className="italic text-indigo-600">Gemma Powered.</span>
+                  AI Safety. <span className="italic text-indigo-600">Gemma Powered.</span>
                 </h2>
                 <p className="text-slate-500 text-lg max-w-xl mx-auto leading-relaxed">
-                  A specialized detection engine built to combat misinformation and expose propaganda using Gemma's advanced reasoning.
+                  A specialized safety and bias detection engine built to identify harmful patterns and ensure content integrity using Gemma's advanced reasoning.
                 </p>
               </div>
 
@@ -231,9 +231,9 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8">
                 {[
-                  { icon: Scale, title: "Bias Scoring", desc: "Quantifies the level of partiality in the text." },
-                  { icon: ShieldAlert, title: "Propaganda Check", desc: "Identifies 20+ known manipulation techniques." },
-                  { icon: MessageSquare, title: "Contextual Insight", desc: "Explains why certain phrases are problematic." }
+                  { icon: ShieldAlert, title: "Safety Guard", desc: "Classifies content as safe, unsafe, or biased." },
+                  { icon: AlertTriangle, title: "Risk Assessment", desc: "Evaluates the risk level of harmful patterns." },
+                  { icon: Scale, title: "Bias Detection", desc: "Identifies subtle biases and logical fallacies." }
                 ].map((feature, i) => (
                   <div key={i} className="space-y-2">
                     <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
@@ -278,25 +278,32 @@ export default function App() {
                   <Card className="border-slate-200 shadow-sm">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                        <Scale className="w-4 h-4" />
-                        Bias Intensity
+                        <ShieldAlert className="w-4 h-4" />
+                        Safety Status
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="text-center py-4">
-                        <span className={cn(
-                          "text-7xl font-serif font-bold",
-                          result.analysis.overallBiasScore > 70 ? "text-red-500" : 
-                          result.analysis.overallBiasScore > 40 ? "text-amber-500" : "text-emerald-500"
+                        <Badge className={cn(
+                          "text-2xl px-4 py-1 font-serif font-bold",
+                          result.analysis.classification === 'SAFE' ? "bg-emerald-100 text-emerald-700" : 
+                          result.analysis.classification === 'UNSAFE' ? "bg-red-100 text-red-700" : 
+                          result.analysis.classification === 'BIASED' ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-700"
                         )}>
-                          {result.analysis.overallBiasScore}
-                        </span>
-                        <span className="text-slate-300 text-2xl font-light ml-1">/100</span>
+                          {result.analysis.classification}
+                        </Badge>
+                        <div className="mt-2 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                          Risk Level: <span className={cn(
+                            "font-bold",
+                            result.analysis.riskLevel === 'High' ? "text-red-500" :
+                            result.analysis.riskLevel === 'Medium' ? "text-amber-500" : "text-emerald-500"
+                          )}>{result.analysis.riskLevel}</span>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs font-medium">
-                          <span className="text-slate-500">Neutral</span>
-                          <span className="text-slate-500">Highly Biased</span>
+                          <span className="text-slate-500">Bias Score</span>
+                          <span className="text-slate-500">{result.analysis.overallBiasScore}/100</span>
                         </div>
                         <Progress 
                           value={result.analysis.overallBiasScore} 
@@ -342,10 +349,10 @@ export default function App() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-amber-500" />
-                            <span className="text-sm font-medium text-slate-600">Leaning</span>
+                            <span className="text-sm font-medium text-slate-600">Action</span>
                           </div>
-                          <Badge variant="outline" className="capitalize border-slate-200">
-                            {result.analysis.politicalLeaning || 'Unknown'}
+                          <Badge variant="outline" className="capitalize border-slate-200 bg-indigo-50 text-indigo-700">
+                            {result.analysis.suggestedAction}
                           </Badge>
                         </div>
                       </div>
@@ -357,12 +364,12 @@ export default function App() {
                     <CardHeader>
                       <CardTitle className="text-sm font-mono uppercase tracking-wider opacity-80 flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4" />
-                        Recommendation
+                        Safety Explanation
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm leading-relaxed italic">
-                        "{result.analysis.recommendation}"
+                        "{result.analysis.explanation}"
                       </p>
                     </CardContent>
                   </Card>
@@ -370,18 +377,17 @@ export default function App() {
 
                 {/* Right Column: Detailed Analysis */}
                 <div className="lg:col-span-2 space-y-6">
-                  <Tabs defaultValue="techniques" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 bg-slate-100/50 p-1 border border-slate-200/60">
-                      <TabsTrigger value="techniques">Techniques</TabsTrigger>
-                      <TabsTrigger value="findings">Findings</TabsTrigger>
+                  <Tabs defaultValue="issues" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 bg-slate-100/50 p-1 border border-slate-200/60">
+                      <TabsTrigger value="issues">Detected Issues</TabsTrigger>
                       <TabsTrigger value="source">Source</TabsTrigger>
-                      <TabsTrigger value="impact">Impact</TabsTrigger>
+                      <TabsTrigger value="impact">Safety Impact</TabsTrigger>
                       <TabsTrigger value="local" className="text-indigo-600 font-semibold">Gemma 4 Code</TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="techniques" className="mt-6 space-y-4">
-                      {result.analysis.propagandaTechniques.length > 0 ? (
-                        result.analysis.propagandaTechniques.map((tech, idx) => (
+                    <TabsContent value="issues" className="mt-6 space-y-4">
+                      {result.analysis.detectedIssues.length > 0 ? (
+                        result.analysis.detectedIssues.map((issue, idx) => (
                           <motion.div
                             key={idx}
                             initial={{ opacity: 0, x: 20 }}
@@ -389,29 +395,14 @@ export default function App() {
                             transition={{ delay: idx * 0.1 }}
                           >
                             <Card className="border-slate-200 shadow-sm hover:border-indigo-200 transition-colors">
-                              <CardHeader className="pb-3">
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <CardTitle className="text-lg font-semibold text-slate-900">{tech.name}</CardTitle>
-                                    <CardDescription className="text-slate-500 mt-1">{tech.description}</CardDescription>
+                              <CardHeader className="py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
                                   </div>
-                                  <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-50">
-                                    {Math.round(tech.confidence * 100)}% Confidence
-                                  </Badge>
+                                  <CardTitle className="text-base font-semibold text-slate-900">{issue}</CardTitle>
                                 </div>
                               </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400">Instances:</h4>
-                                  <div className="space-y-2">
-                                    {tech.examples.map((ex, i) => (
-                                      <div key={i} className="p-3 bg-slate-50 rounded-lg border-l-2 border-indigo-400 text-sm text-slate-700 italic">
-                                        "{ex}"
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </CardContent>
                             </Card>
                           </motion.div>
                         ))
@@ -420,26 +411,9 @@ export default function App() {
                           <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
                             <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                           </div>
-                          <p className="text-slate-500 font-medium">No propaganda techniques detected.</p>
+                          <p className="text-slate-500 font-medium">No safety issues detected.</p>
                         </div>
                       )}
-                    </TabsContent>
-
-                    <TabsContent value="findings" className="mt-6">
-                      <Card className="border-slate-200 shadow-sm">
-                        <CardContent className="p-8">
-                          <ul className="space-y-6">
-                            {result.analysis.keyFindings.map((finding, i) => (
-                              <li key={i} className="flex gap-4">
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                                  {i + 1}
-                                </div>
-                                <p className="text-slate-700 leading-relaxed">{finding}</p>
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
                     </TabsContent>
 
                     <TabsContent value="source" className="mt-6">
@@ -455,27 +429,27 @@ export default function App() {
                       <Card className="border-slate-200 shadow-sm overflow-hidden">
                         <div className="h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
                         <CardHeader>
-                          <CardTitle className="text-lg font-serif">Social Impact & Gemma</CardTitle>
-                          <CardDescription>How this project serves the public interest.</CardDescription>
+                          <CardTitle className="text-lg font-serif">AI Safety Impact & Gemma</CardTitle>
+                          <CardDescription>How this project ensures safe AI interactions.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                              <h4 className="font-bold text-slate-900 mb-1">Democratic Integrity</h4>
-                              <p className="text-sm text-slate-600">Protects voters from manipulative political rhetoric and foreign influence operations.</p>
+                              <h4 className="font-bold text-slate-900 mb-1">Content Moderation</h4>
+                              <p className="text-sm text-slate-600">Automates the detection of toxic, harmful, or inappropriate content in real-time.</p>
                             </div>
                             <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                              <h4 className="font-bold text-slate-900 mb-1">Media Literacy</h4>
-                              <p className="text-sm text-slate-600">Educates users on common propaganda techniques to build long-term critical thinking skills.</p>
+                              <h4 className="font-bold text-slate-900 mb-1">Bias Mitigation</h4>
+                              <p className="text-sm text-slate-600">Identifies subtle biases in AI responses or human text to promote neutral information.</p>
                             </div>
                           </div>
                           <div className="p-6 rounded-xl bg-indigo-50 border border-indigo-100">
                             <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2">
                               <Zap className="w-4 h-4" />
-                              Why Gemma 4?
+                              Safety with Gemma
                             </h4>
                             <p className="text-sm text-indigo-800 leading-relaxed">
-                              Gemma 4's 26B parameter architecture provides the nuanced linguistic understanding required to detect "soft" propaganda—techniques like <i>Framing</i> and <i>Omission</i> that smaller models often miss. By leveraging Gemma 4, we provide production-grade analysis that was previously only available to state-level actors.
+                              Gemma's architecture is built with safety at its core. By using Gemma for moderation, we leverage its advanced reasoning to distinguish between harmless context and actual harmful intent, reducing false positives in safety systems.
                             </p>
                           </div>
                         </CardContent>
@@ -524,13 +498,16 @@ model = AutoModelForCausalLM.from_pretrained(
                     <CardHeader>
                       <CardTitle className="text-sm font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
                         <TrendingUp className="w-4 h-4" />
-                        Technique Distribution
+                        Safety & Bias Breakdown
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={result.analysis.propagandaTechniques}>
+                          <BarChart data={[
+                            { name: 'Bias', value: result.analysis.overallBiasScore },
+                            { name: 'Objectivity', value: result.analysis.objectivityScore }
+                          ]}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis 
                               dataKey="name" 
@@ -542,16 +519,15 @@ model = AutoModelForCausalLM.from_pretrained(
                               axisLine={false} 
                               tickLine={false} 
                               tick={{ fontSize: 10, fill: '#64748b' }}
-                              domain={[0, 1]}
+                              domain={[0, 100]}
                             />
                             <Tooltip 
                               cursor={{ fill: '#f8fafc' }}
                               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                             />
-                            <Bar dataKey="confidence" radius={[4, 4, 0, 0]}>
-                              {result.analysis.propagandaTechniques.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#4f46e5' : '#818cf8'} />
-                              ))}
+                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                              <Cell fill="#4f46e5" />
+                              <Cell fill="#818cf8" />
                             </Bar>
                           </BarChart>
                         </ResponsiveContainer>
@@ -572,7 +548,7 @@ model = AutoModelForCausalLM.from_pretrained(
             <span className="text-sm font-semibold tracking-tight">GemmaGuard</span>
           </div>
           <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-            Built to empower citizens with AI-driven truth detection.
+            Built to empower developers and users with AI-driven safety and bias detection.
           </p>
         </div>
       </footer>
@@ -623,10 +599,10 @@ model = AutoModelForCausalLM.from_pretrained(
                       <div className="flex items-start justify-between mb-2">
                         <Badge className={cn(
                           "text-[10px] px-1.5 py-0",
-                          item.analysis.overallBiasScore > 70 ? "bg-red-100 text-red-600" : 
-                          item.analysis.overallBiasScore > 40 ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"
+                          item.analysis.classification === 'SAFE' ? "bg-emerald-100 text-emerald-600" : 
+                          item.analysis.classification === 'UNSAFE' ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600"
                         )}>
-                          Score: {item.analysis.overallBiasScore}
+                          {item.analysis.classification}
                         </Badge>
                         <span className="text-[10px] text-slate-400 font-mono">
                           {new Date(item.timestamp).toLocaleDateString()}
@@ -637,13 +613,13 @@ model = AutoModelForCausalLM.from_pretrained(
                       </p>
                       <div className="flex items-center justify-between">
                         <div className="flex gap-1">
-                          {item.analysis.propagandaTechniques.slice(0, 2).map((t: any, i: number) => (
+                          {(item.analysis.detectedIssues || []).slice(0, 2).map((issue: string, i: number) => (
                             <span key={i} className="text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-500">
-                              {t.name}
+                              {issue}
                             </span>
                           ))}
-                          {item.analysis.propagandaTechniques.length > 2 && (
-                            <span className="text-[9px] text-slate-400">+{item.analysis.propagandaTechniques.length - 2} more</span>
+                          {(item.analysis.detectedIssues || []).length > 2 && (
+                            <span className="text-[9px] text-slate-400">+{(item.analysis.detectedIssues || []).length - 2} more</span>
                           )}
                         </div>
                         <Button 
